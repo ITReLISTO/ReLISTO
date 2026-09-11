@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ReLISTO — Rent Increase Portal (Draft)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f6f5;
+    margin: 0;
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .progress .dot {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: #e2e8e4;
+  }
+  .progress .dot.active { background: #7ba05b; }
+  h1 { font-size: 20px; color: #2f3e37; margin: 0 0 4px; }
+  p.sub { color: #6b7a72; font-size: 14px; margin-bottom: 24px; }
+  label { display: block; font-size: 14px; font-weight: 600; color: #2f3e37; margin: 16px 0 6px; }
+  input[type=text], input[type=email], input[type=number], textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid #d7ded9;
+    border-radius: 8px; font-size: 15px; font-family: inherit;
+  }
+  textarea { resize: vertical; }
+  button {
+    margin-top: 24px; background: #7ba05b; color: white; border: none;
+    padding: 10px 20px; border-radius: 8px; font-size: 15px; cursor: pointer;
+  }
+  button.secondary { background: #eef1ef; color: #2f3e37; margin-left: 8px; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .field-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eef1ef; font-size: 14px; }
+  .field-row span:first-child { color: #6b7a72; }
+  .field-row span:last-child { color: #2f3e37; font-weight: 600; }
+  .note { font-size: 13px; color: #8a7a3a; margin-top: 10px; }
+  .error { color: #b33; font-size: 14px; margin-top: 12px; display: none; }
+  .error.show { display: block; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .success-icon { font-size: 40px; text-align: center; margin-bottom: 8px; }
+  .caseid { font-size: 12px; color: #9aa6a0; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="progress">
+    <div class="dot active" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+    <div class="dot" id="dot3"></div>
+    <div class="dot" id="dot4"></div>
+  </div>
+
+  <!-- SCREEN 1: Basic info -->
+  <div class="screen active" id="screen1">
+    <h1>We Lease and Manage. Start Here.</h1>
+    <p class="sub">Let's get started with your rent increase request. First, a bit about you and the property.</p>
+
+    <label for="ownerName">Your name</label>
+    <input type="text" id="ownerName" placeholder="Jane Smith" />
+
+    <label for="ownerEmail">Email</label>
+    <input type="email" id="ownerEmail" placeholder="jane@example.com" />
+
+    <label for="propertyAddress">Property address</label>
+    <input type="text" id="propertyAddress" placeholder="123 Main St, San Francisco, CA" />
+
+    <div class="error" id="error1"></div>
+    <button id="btn1" onclick="submitStep1()">Continue</button>
+  </div>
+
+  <!-- SCREEN 2: Upload lease -->
+  <div class="screen" id="screen2">
+    <h1>Upload Your Lease</h1>
+    <p class="sub">Upload your lease and we'll read it to pull out the key details — no need to retype everything.</p>
+
+    <label for="leaseFile">Lease (PDF)</label>
+    <input type="file" id="leaseFile" accept="application/pdf" />
+
+    <details style="margin-top:10px;">
+      <summary style="font-size:13px; color:#6b7a72; cursor:pointer;">Or paste lease text instead</summary>
+      <textarea id="leaseText" rows="6" placeholder="Paste the lease text here..." style="margin-top:8px;"></textarea>
+    </details>
+
+    <div class="error" id="error2"></div>
+    <button id="btn2" onclick="submitStep2()">Read My Lease</button>
+  </div>
+
+  <!-- SCREEN 3: Confirm extracted fields -->
+  <div class="screen" id="screen3">
+    <h1>Confirm What We Found</h1>
+    <p class="sub">Here's what we found in your lease. Change anything that's incorrect.</p>
+
+    <label for="c_tenants">Tenant(s)</label>
+    <input type="text" id="c_tenants" />
+
+    <label for="c_start">Lease start</label>
+    <input type="text" id="c_start" />
+
+    <label for="c_end">Lease end</label>
+    <input type="text" id="c_end" />
+
+    <label for="c_rent">Monthly rent</label>
+    <input type="number" id="c_rent" />
+
+    <label for="c_deposit">Security deposit</label>
+    <input type="number" id="c_deposit" />
+
+    <div class="note" id="extractionNote"></div>
+    <div class="error" id="error3"></div>
+    <button id="btn3" onclick="submitStep3()">Confirm & Submit</button>
+  </div>
+
+  <!-- SCREEN 4: Done -->
+  <div class="screen" id="screen4">
+    <div class="success-icon">✓</div>
+    <h1 style="text-align:center;">You're All Set</h1>
+    <p class="sub" style="text-align:center;">
+      Thanks! Your rent increase request has been submitted. Our team will review the details
+      and follow up with next steps.
+    </p>
+    <div class="caseid" style="text-align:center;">Reference ID: <span id="finalCaseId"></span></div>
+  </div>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const CREATE_CASE_URL = "https://odqpvciwzrxxiczjtciw.supabase.co/functions/v1/create-case";
+const EXTRACT_LEASE_URL = "https://odqpvciwzrxxiczjtciw.supabase.co/functions/v1/Extract-lease-info";
+const CONFIRM_CASE_URL = "https://odqpvciwzrxxiczjtciw.supabase.co/functions/v1/confirm-case";
+
+let currentCaseId = null;
+let currentExtraction = null;
+
+function goToScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen' + n).classList.add('active');
+  document.querySelectorAll('.progress .dot').forEach((d, i) => {
+    d.classList.toggle('active', i < n);
+  });
+}
+
+async function submitStep1() {
+  const btn = document.getElementById('btn1');
+  const errorBox = document.getElementById('error1');
+  errorBox.classList.remove('show');
+
+  const ownerName = document.getElementById('ownerName').value.trim();
+  const ownerEmail = document.getElementById('ownerEmail').value.trim();
+  const propertyAddress = document.getElementById('propertyAddress').value.trim();
+
+  if (!ownerName || !propertyAddress) {
+    errorBox.textContent = 'Please enter your name and the property address.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const res = await fetch(CREATE_CASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerName, ownerEmail, propertyAddress })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
+
+    currentCaseId = data.caseId;
+    goToScreen(2);
+  } catch (err) {
+    errorBox.textContent = 'Something went wrong: ' + err.message;
+    errorBox.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Continue';
+  }
+}
+
+// Renders each PDF page as an image (works for both typed AND scanned/photographed
+// leases, since it captures what the page visually looks like rather than relying
+// on a text layer that scanned documents don't have).
+const MAX_PAGES = 12; // cap to keep request size reasonable; most key lease terms are in the first several pages
+
+async function extractImagesFromPdf(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pageCount = Math.min(pdf.numPages, MAX_PAGES);
+  const images = [];
+
+  for (let i = 1; i <= pageCount; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    images.push(canvas.toDataURL('image/jpeg', 0.85)); // base64 data URL
+  }
+
+  return { images, truncated: pdf.numPages > MAX_PAGES, totalPages: pdf.numPages };
+}
+
+async function submitStep2() {
+  const btn = document.getElementById('btn2');
+  const errorBox = document.getElementById('error2');
+  errorBox.classList.remove('show');
+
+  const fileInput = document.getElementById('leaseFile');
+  const pastedText = document.getElementById('leaseText').value.trim();
+  let leaseImages = null;
+  let leaseText = pastedText;
+
+  if (!leaseText && fileInput.files.length > 0) {
+    btn.disabled = true;
+    btn.textContent = 'Reading PDF...';
+    try {
+      const result = await extractImagesFromPdf(fileInput.files[0]);
+      leaseImages = result.images;
+      if (result.truncated) {
+        console.warn(`Lease has ${result.totalPages} pages — only processing the first ${MAX_PAGES}.`);
+      }
+    } catch (err) {
+      errorBox.textContent = 'Could not read the PDF: ' + err.message;
+      errorBox.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Read My Lease';
+      return;
+    }
+  }
+
+  if (!leaseText && !leaseImages) {
+    errorBox.textContent = 'Please upload a PDF or paste the lease text first.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Reading lease...';
+
+  try {
+    const res = await fetch(EXTRACT_LEASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        leaseText: leaseText || null,
+        leaseImages: leaseImages || null,
+        caseId: currentCaseId,
+        propertyAddress: document.getElementById('propertyAddress').value.trim(),
+        ownerName: document.getElementById('ownerName').value.trim()
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
+
+    currentExtraction = data.extracted;
+
+    document.getElementById('c_tenants').value = (currentExtraction.tenant_names || []).join(', ');
+    document.getElementById('c_start').value = currentExtraction.lease_start_date || '';
+    document.getElementById('c_end').value = currentExtraction.lease_end_date || '';
+    document.getElementById('c_rent').value =
+      typeof currentExtraction.monthly_rent === 'number' ? currentExtraction.monthly_rent : '';
+    document.getElementById('c_deposit').value =
+      typeof currentExtraction.security_deposit === 'number' ? currentExtraction.security_deposit : '';
+    document.getElementById('extractionNote').textContent =
+      currentExtraction.notes ? 'Note: ' + currentExtraction.notes : '';
+
+    goToScreen(3);
+  } catch (err) {
+    errorBox.textContent = 'Something went wrong: ' + err.message;
+    errorBox.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Read My Lease';
+  }
+}
+
+async function submitStep3() {
+  const btn = document.getElementById('btn3');
+  const errorBox = document.getElementById('error3');
+  errorBox.classList.remove('show');
+
+  const corrections = {
+    tenant_names: document.getElementById('c_tenants').value.split(',').map(s => s.trim()).filter(Boolean),
+    lease_start_date: document.getElementById('c_start').value.trim(),
+    lease_end_date: document.getElementById('c_end').value.trim(),
+    monthly_rent: parseFloat(document.getElementById('c_rent').value) || null,
+    security_deposit: parseFloat(document.getElementById('c_deposit').value) || null,
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    const res = await fetch(CONFIRM_CASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ caseId: currentCaseId, corrections })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
+
+    document.getElementById('finalCaseId').textContent = currentCaseId;
+    goToScreen(4);
+  } catch (err) {
+    errorBox.textContent = 'Something went wrong: ' + err.message;
+    errorBox.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirm & Submit';
+  }
+}
+</script>
+</body>
+</html>
