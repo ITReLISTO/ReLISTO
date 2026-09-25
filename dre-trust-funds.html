@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DRE Trust Funds Record – ReLISTO</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #003846; --sage: #D9E2DB; --lime: #B1C993;
+      --white: #FFFFFF; --text: #1a2a24; --muted: #5a6a62; --border: #c8d4cc;
+      --font-head: 'Century Gothic','CenturyGothic','AppleGothic',sans-serif;
+      --font-body: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+    }
+    body { min-height:100vh; background:var(--sage); font-family:var(--font-body); padding:40px 16px; color:var(--text); }
+    .card { background:var(--white); border-radius:4px; max-width:820px; margin:0 auto; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.13); }
+    .card-header { background:var(--teal); padding:32px 48px 28px; position:relative; overflow:hidden; }
+    .card-header::after { content:''; position:absolute; right:-60px; bottom:-60px; width:220px; height:220px; border-radius:50%; background:rgba(177,201,147,0.13); }
+    .hidden { display:none !important; }
+    .logo-area { display:flex; align-items:center; gap:18px; margin-bottom:18px; }
+    .logo-name { font-family:var(--font-head); font-weight:700; font-size:28px; letter-spacing:0.12em; color:var(--white); }
+    .eyebrow { font-family:var(--font-head); font-size:12px; font-weight:700; letter-spacing:0.14em; color:var(--lime); text-transform:uppercase; margin-bottom:6px; }
+    .card-header h1 { font-family:var(--font-head); font-weight:700; font-size:24px; color:var(--white); margin-bottom:8px; line-height:1.3; }
+    .card-header p { color:rgba(255,255,255,0.78); font-size:13px; line-height:1.7; position:relative; z-index:1; }
+    .card-body { padding:40px 48px; }
+    .sec { font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--teal); border-bottom:2px solid var(--lime); padding-bottom:6px; margin:32px 0 18px; }
+    .sec:first-of-type { margin-top:0; }
+    .field { margin-bottom:20px; }
+    .field > label, .field > .lbl { display:block; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+    .req { color:#c0392b; }
+    .field input[type=text], .field input[type=email], .field input[type=date], .field input[type=password], .field select, .field textarea { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:4px; font-size:15px; font-family:var(--font-body); color:var(--text); background:var(--white); transition:border-color 0.2s; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--teal); }
+    .field textarea { resize:vertical; min-height:80px; }
+    .money { position:relative; }
+    .money span { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px; pointer-events:none; }
+    .money input { padding-left:28px !important; }
+    .err input, .err select, .err textarea, .err .opts label, .err .drop { border-color:#c0392b !important; }
+    .err > label, .err > .lbl { color:#c0392b; }
+    .errmsg { display:none; color:#c0392b; font-size:12px; margin-top:4px; }
+    .err .errmsg { display:block; }
+    .hint { font-size:12px; color:var(--muted); margin-top:5px; line-height:1.5; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .row-addr { display:grid; grid-template-columns:2fr 0.8fr 1.4fr; gap:16px; }
+    .opts { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
+    .opts label { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text); background:var(--sage); border:1.5px solid var(--border); border-radius:4px; padding:9px 14px; cursor:pointer; transition:border-color 0.15s, background 0.15s; }
+    .opts label:hover { border-color:var(--teal); }
+    .opts input { accent-color:var(--teal); width:16px; height:16px; margin:0; }
+    .opts label:has(input:checked) { border-color:var(--teal); background:#eef3ef; box-shadow:inset 0 0 0 1px var(--teal); }
+    .notice { background:#f0f5f1; border-left:4px solid var(--lime); padding:14px 16px; border-radius:0 4px 4px 0; margin-bottom:20px; font-size:13px; line-height:1.7; }
+    .warn { background:#fff7e6; border-left:4px solid #e0a100; padding:12px 16px; border-radius:0 4px 4px 0; margin-top:10px; font-size:13px; line-height:1.6; color:#6b4a00; }
+    .conditional { background:#f9fbf9; border:1.5px dashed var(--lime); border-radius:4px; padding:16px 20px; margin-top:12px; }
+    .drop { border:2px dashed var(--border); border-radius:6px; padding:28px 20px; text-align:center; background:#fafcfa; cursor:pointer; transition:border-color 0.15s, background 0.15s; }
+    .drop:hover, .drop.over { border-color:var(--teal); background:#f0f5f1; }
+    .drop strong { color:var(--teal); text-decoration:underline; }
+    .drop .sub { font-size:12px; color:var(--muted); margin-top:6px; }
+    .file-chip { display:flex; align-items:center; gap:12px; margin-top:10px; padding:10px 12px; border:1.5px solid var(--border); border-radius:4px; font-size:14px; }
+    .file-chip img { width:56px; height:56px; object-fit:cover; border-radius:3px; border:1px solid var(--border); }
+    .file-chip .meta { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-chip .meta small { display:block; color:var(--muted); font-size:12px; }
+    .file-chip button { background:none; border:none; color:#c0392b; font-size:13px; cursor:pointer; text-decoration:underline; }
+    .validation-summary { background:#fdecea; border:1px solid #f5c6c0; border-radius:6px; padding:12px 16px; margin-bottom:20px; font-size:14px; color:#a94442; }
+    .btn { display:block; width:100%; padding:16px; background:var(--teal); color:var(--white); border:none; border-radius:4px; font-size:14px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; margin-top:32px; transition:background 0.2s; }
+    .btn:hover { background:#004f63; }
+    .btn:disabled { background:#aaa; cursor:not-allowed; }
+    .btn-alt { background:var(--white); color:var(--teal); border:1.5px solid var(--teal); margin-top:16px; }
+    .btn-alt:hover { background:#f0f5f1; }
+    .spin { display:none; width:20px; height:20px; border:3px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .ok { display:none; background:#27ae60; color:#fff; border-radius:4px; padding:16px; margin-bottom:24px; font-size:15px; line-height:1.6; }
+    .fail { display:none; background:#c0392b; color:#fff; border-radius:4px; padding:16px; margin-bottom:24px; font-size:15px; }
+    @media(max-width:600px){ .card-header,.card-body{padding-left:24px;padding-right:24px;} .row2,.row-addr{grid-template-columns:1fr;} .opts label{flex:1 1 100%;} }
+  </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <div class="logo-area">
+      <img id="logo" src="data:image/png;base64,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" alt="ReLISTO" style="width:110px;height:110px;border-radius:50%;object-fit:cover;flex-shrink:0;" />
+      <span class="logo-name">ReLISTO</span>
+    </div>
+    <div class="eyebrow">ReLISTO DRE Form</div>
+    <h1>Record of All Trust Funds Received — Not Placed in Broker's Trust Account</h1>
+    <p>Agents: complete one record each time you receive funds on behalf of a client that are not deposited into ReLISTO's broker trust account. Funds must be disposed of (delivered to the principal, deposited to the trust account, or returned) within 72 hours of receipt.</p>
+  </div>
+
+  <div class="card-body" id="formBody">
+    <div class="ok" id="ok"></div>
+    <div class="fail" id="fail">Something went wrong and the record was not saved. Please try again, or email the details and check image to TC@relisto.com.</div>
+    <div class="validation-summary hidden" id="valSummary"></div>
+
+    <div id="formFields">
+      <!-- AGENT -->
+      <div class="sec">Agent</div>
+      <div class="field" id="f-agentEmail">
+        <label for="agentEmail">Agent Email <span class="req">*</span></label>
+        <input type="email" id="agentEmail" list="agentList" placeholder="name@relisto.com" autocomplete="email" oninput="if (!pdfEmailTouched) $('pdfEmail').value = this.value" />
+        <datalist id="agentList">
+          <option value="Eric@relisto.com">Eric Baird</option>
+          <option value="Liz@relisto.com">Elizabeth Kim</option>
+          <option value="Joseph@relisto.com">Joseph Johnston</option>
+          <option value="Jody@relisto.com">Jody Cox</option>
+          <option value="Sue@relisto.com">Sue Bowers</option>
+          <option value="Jackie@relisto.com">Jackie Tom</option>
+          <option value="Virginia@relisto.com">Virginia Imbriogiano</option>
+          <option value="Aliea@relisto.com">Aliea Marrero</option>
+        </datalist>
+        <span class="errmsg">Please enter a valid email address.</span>
+      </div>
+
+      <!-- RECEIPT -->
+      <div class="sec">Funds Received</div>
+      <div class="row2">
+        <div class="field" id="f-dateReceived">
+          <label for="dateReceived">Date Received <span class="req">*</span></label>
+          <input type="date" id="dateReceived" onchange="onDatesChange()" />
+          <div class="hint">The date the funds were received by the agent.</div>
+          <span class="errmsg" id="dateReceivedMsg">Please enter the date received.</span>
+        </div>
+        <div class="field" id="f-amount">
+          <label for="amount">Amount <span class="req">*</span></label>
+          <div class="money"><span>$</span><input type="text" id="amount" inputmode="decimal" placeholder="0.00" onblur="formatAmount()" /></div>
+          <span class="errmsg">Please enter an amount greater than $0.</span>
+        </div>
+      </div>
+
+      <div class="field" id="f-formOfReceipt">
+        <span class="lbl">Form of Receipt <span class="req">*</span></span>
+        <div class="opts" id="formOfReceipt">
+          <label><input type="radio" name="formOfReceipt" value="Cashiers Check" onchange="onReceiptChange()" /> Cashier's Check</label>
+          <label><input type="radio" name="formOfReceipt" value="Wire Transfer" onchange="onReceiptChange()" /> Wire Transfer</label>
+          <label><input type="radio" name="formOfReceipt" value="Non Secured Check (personal or certified check)" onchange="onReceiptChange()" /> Non-Secured Check (personal or certified)</label>
+          <label><input type="radio" name="formOfReceipt" value="Money Order" onchange="onReceiptChange()" /> Money Order</label>
+          <label><input type="radio" name="formOfReceipt" value="Cash" onchange="onReceiptChange()" /> Cash</label>
+          <label><input type="radio" name="formOfReceipt" value="Square" onchange="onReceiptChange()" /> Square</label>
+        </div>
+        <span class="errmsg">Please select the form of receipt.</span>
+      </div>
+
+      <div class="field" id="f-receivedFrom">
+        <label for="receivedFrom">Received From <span class="req">*</span></label>
+        <input type="text" id="receivedFrom" placeholder="Full name" autocomplete="off" />
+        <div class="hint">Full name of the tenant or person making the payment.</div>
+        <span class="errmsg">Please enter who the funds were received from.</span>
+      </div>
+
+      <!-- PROPERTY -->
+      <div class="sec">Description of Property</div>
+      <div class="row-addr">
+        <div class="field" id="f-addr1">
+          <label for="addr1">Address Line 1 <span class="req">*</span></label>
+          <input type="text" id="addr1" placeholder="123 Main St" autocomplete="off" />
+          <span class="errmsg">Please enter the street address.</span>
+        </div>
+        <div class="field">
+          <label for="unit">Unit #</label>
+          <input type="text" id="unit" placeholder="Apt 4" autocomplete="off" />
+        </div>
+        <div class="field" id="f-city">
+          <label for="city">City <span class="req">*</span></label>
+          <input type="text" id="city" list="cityList" placeholder="San Francisco" autocomplete="off" />
+          <datalist id="cityList">
+            <option>San Francisco</option><option>Oakland</option><option>Berkeley</option><option>Alameda</option>
+            <option>Concord</option><option>El Cerrito</option><option>Emeryville</option><option>Hayward</option>
+            <option>Piedmont</option><option>Richmond</option><option>San Leandro</option><option>Walnut Creek</option>
+          </datalist>
+          <span class="errmsg">Please enter the city.</span>
+        </div>
+      </div>
+
+      <!-- DISPOSITION -->
+      <div class="sec">Disposition of Funds</div>
+      <div class="field" id="f-disposition">
+        <span class="lbl">Disposition of Funds <span class="req">*</span></span>
+        <div class="opts" id="disposition">
+          <label><input type="radio" name="disposition" value="Principal" onchange="onDispositionChange()" /> Principal (delivered to owner)</label>
+          <label><input type="radio" name="disposition" value="Trust Account" onchange="onDispositionChange()" /> Trust Account</label>
+          <label><input type="radio" name="disposition" value="Returned" onchange="onDispositionChange()" /> Returned</label>
+          <label><input type="radio" name="disposition" value="Other" onchange="onDispositionChange()" /> Other</label>
+        </div>
+        <span class="errmsg">Please select what happened to the funds.</span>
+        <div class="conditional hidden" id="dispOtherWrap">
+          <div class="field" id="f-dispositionOther" style="margin-bottom:0;">
+            <label for="dispositionOther">Other — please describe <span class="req">*</span></label>
+            <input type="text" id="dispositionOther" placeholder="Where did the funds go?" />
+            <span class="errmsg">Please describe the disposition.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" id="f-dateDisposition">
+        <label for="dateDisposition">Date of Disposition (72 Hours From Received) <span class="req">*</span></label>
+        <input type="date" id="dateDisposition" onchange="onDatesChange()" />
+        <div class="hint">The date the funds were delivered to the owner, deposited, or returned.</div>
+        <span class="errmsg" id="dateDispositionMsg">Please enter the date of disposition.</span>
+        <div class="warn hidden" id="lateWarn"></div>
+      </div>
+
+      <!-- CHECK IMAGE -->
+      <div class="sec">Check Image</div>
+      <div class="field" id="f-checkImage">
+        <span class="lbl">Add Check Image <span class="req hidden" id="checkReqStar">*</span></span>
+        <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Upload check image">
+          Drag and drop here or <strong>browse files</strong>
+          <div class="sub">Photo or PDF · Max file size: 10 MB</div>
+        </div>
+        <input type="file" id="checkImage" accept="image/*,.pdf,.heic" class="hidden" />
+        <div id="fileChip" class="file-chip hidden">
+          <img id="filePreview" alt="" class="hidden" />
+          <div class="meta"><span id="fileName"></span><small id="fileSize"></small></div>
+          <button type="button" onclick="clearFile()">Remove</button>
+        </div>
+        <div class="hint" id="checkHint">Required when the funds were received by check or money order.</div>
+        <span class="errmsg" id="checkMsg">Please attach an image of the check.</span>
+      </div>
+
+      <!-- ENCRYPTED PDF COPY -->
+      <div class="sec">Encrypted PDF Copy</div>
+      <div class="notice">When you submit, a password-protected PDF of this record is created and emailed to you. Choose a password you'll remember, because ReLISTO doesn't store it and it can't be recovered.</div>
+      <div class="field" id="f-pdfEmail">
+        <label for="pdfEmail">Your Email <span class="req">*</span></label>
+        <input type="email" id="pdfEmail" placeholder="name@relisto.com" autocomplete="email" oninput="pdfEmailTouched = true" />
+        <div class="hint">The encrypted PDF will be sent here. Must be a @relisto.com address.</div>
+        <span class="errmsg" id="pdfEmailMsg">Please enter a valid @relisto.com email address.</span>
+      </div>
+      <div class="row2">
+        <div class="field" id="f-pdfPass">
+          <label for="pdfPass">PDF Password <span class="req">*</span></label>
+          <input type="password" id="pdfPass" autocomplete="new-password" placeholder="At least 8 characters" />
+          <span class="errmsg">Password must be at least 8 characters.</span>
+        </div>
+        <div class="field" id="f-pdfPass2">
+          <label for="pdfPass2">Confirm Password <span class="req">*</span></label>
+          <input type="password" id="pdfPass2" autocomplete="new-password" />
+          <span class="errmsg">Passwords don't match.</span>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:-8px;cursor:pointer;">
+        <input type="checkbox" id="showPass" style="accent-color:var(--teal);" onchange="['pdfPass','pdfPass2'].forEach(i => $(i).type = this.checked ? 'text' : 'password')" /> Show password
+      </label>
+
+      <button class="btn" id="btn" onclick="submitForm()">
+        <span id="btnTxt">Submit Form</span>
+        <div class="spin" id="spin"></div>
+      </button>
+    </div>
+
+    <button class="btn btn-alt hidden" id="againBtn" onclick="resetForm()">Record Another Receipt</button>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ────────────────────────────────────────────────────────────
+  // TODO: confirm which Aptly board this record goes to and fill in the
+  // real field keys (fetch the board schema from core-api like the other forms).
+  const APTLY_TOKEN = '4dmBkonuSxWW+IxkJMzF7YjphODhV0wRv5mmlQFL4FM=';
+  const APTLY_BOARD = 'TODO_BOARD_SLUG';          // e.g. 'trust-funds' → https://core-api.getaptly.com/api/board/<slug>
+  const APTLY_STAGE = null;                       // optional: stage/column key for new cards
+  const F = {                                     // Aptly field keys (placeholders until the board exists)
+    agentEmail:      'TODO_agentEmail',
+    dateReceived:    'TODO_dateReceived',
+    formOfReceipt:   'TODO_formOfReceipt',
+    amount:          'TODO_amount',
+    receivedFrom:    'TODO_receivedFrom',
+    street:          'TODO_street',
+    unit:            'TODO_unit',
+    city:            'TODO_city',
+    disposition:     'TODO_disposition',
+    dispositionOther:'TODO_dispositionOther',
+    dateDisposition: 'TODO_dateDisposition',
+  };
+  // Supabase edge function that emails the encrypted PDF (see send-dre-record/index.ts).
+  const PDF_EMAIL_URL = 'https://odqpvciwzrxxiczjtciw.supabase.co/functions/v1/send-dre-record';
+  const PDF_EMAIL_DOMAIN = '@relisto.com';        // must match ALLOWED_DOMAIN in the edge function
+  let pdfEmailTouched = false;
+  const MAX_FILE_BYTES = 10 * 1024 * 1024;
+  const CHECK_TYPES = ['Cashiers Check', 'Non Secured Check (personal or certified check)', 'Money Order'];
+
+  // ─── HELPERS ───────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const radioVal = name => { const r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ''; };
+  function todayISO() {
+    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
+  function daysBetween(a, b) { return Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / 86400000); }
+  function fmtDate(iso) { if (!iso) return ''; const [y, m, d] = iso.split('-'); return m + '/' + d + '/' + y; }
+  function parseAmount() { const n = parseFloat(($('amount').value || '').replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; }
+  function formatAmount() {
+    const n = parseAmount();
+    if (n > 0) $('amount').value = n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function setErr(id, on) { const el = $('f-' + id); if (el) el.classList.toggle('err', !!on); }
+
+  // ─── INIT ──────────────────────────────────────────────────────────────
+  function initDates() {
+    const t = todayISO();
+    $('dateReceived').value = t; $('dateReceived').max = t;
+    $('dateDisposition').value = t;
+    onDatesChange();
+  }
+  initDates();
+  // Clear a field's error as soon as the user edits it
+  document.addEventListener('input', e => { const f = e.target.closest && e.target.closest('.field.err'); if (f) f.classList.remove('err'); });
+
+  // ─── CONDITIONAL LOGIC ─────────────────────────────────────────────────
+  function onReceiptChange() {
+    const needsCheck = CHECK_TYPES.includes(radioVal('formOfReceipt'));
+    $('checkReqStar').classList.toggle('hidden', !needsCheck);
+    setErr('formOfReceipt', false);
+  }
+  function onDispositionChange() {
+    $('dispOtherWrap').classList.toggle('hidden', radioVal('disposition') !== 'Other');
+    setErr('disposition', false);
+  }
+  function onDatesChange() {
+    const r = $('dateReceived').value, d = $('dateDisposition').value, w = $('lateWarn');
+    if (r) $('dateDisposition').min = r;
+    w.classList.add('hidden');
+    if (r && d) {
+      const gap = daysBetween(r, d);
+      if (gap > 3) {
+        w.textContent = 'This disposition is ' + gap + ' days after the funds were received — more than the 72-hour window. You can still submit; the record will be flagged as late for the broker to review.';
+        w.classList.remove('hidden');
+      }
+    }
+  }
+
+  // ─── FILE UPLOAD ───────────────────────────────────────────────────────
+  let checkFile = null;
+  const dz = $('dropZone'), fi = $('checkImage');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+  ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('over'); }));
+  dz.addEventListener('drop', e => { if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+  fi.addEventListener('change', () => { if (fi.files[0]) setFile(fi.files[0]); });
+
+  function setFile(file) {
+    const msg = $('checkMsg');
+    if (file.size > MAX_FILE_BYTES) {
+      msg.textContent = 'That file is ' + (file.size / 1048576).toFixed(1) + ' MB — the limit is 10 MB.';
+      setErr('checkImage', true); fi.value = ''; return;
+    }
+    checkFile = file;
+    setErr('checkImage', false);
+    $('fileName').textContent = file.name;
+    $('fileSize').textContent = (file.size / 1024 < 1024 ? Math.round(file.size / 1024) + ' KB' : (file.size / 1048576).toFixed(1) + ' MB');
+    const img = $('filePreview');
+    if (file.type.startsWith('image/')) { img.src = URL.createObjectURL(file); img.classList.remove('hidden'); }
+    else img.classList.add('hidden');
+    $('fileChip').classList.remove('hidden');
+    dz.classList.add('hidden');
+  }
+  function clearFile() {
+    checkFile = null; fi.value = '';
+    $('fileChip').classList.add('hidden'); dz.classList.remove('hidden');
+  }
+
+  // ─── VALIDATION ────────────────────────────────────────────────────────
+  function validate() {
+    const problems = [];
+    const check = (id, ok, label) => { setErr(id, !ok); if (!ok) problems.push(label); };
+
+    check('agentEmail', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('agentEmail').value.trim()), 'Agent Email');
+
+    const r = $('dateReceived').value;
+    let rOk = !!r;
+    $('dateReceivedMsg').textContent = 'Please enter the date received.';
+    if (r && r > todayISO()) { rOk = false; $('dateReceivedMsg').textContent = 'The date received can’t be in the future.'; }
+    check('dateReceived', rOk, 'Date Received');
+
+    check('formOfReceipt', !!radioVal('formOfReceipt'), 'Form of Receipt');
+    check('amount', parseAmount() > 0, 'Amount');
+    check('receivedFrom', $('receivedFrom').value.trim().length > 1, 'Received From');
+    check('addr1', !!$('addr1').value.trim(), 'Address Line 1');
+    check('city', !!$('city').value.trim(), 'City');
+    check('disposition', !!radioVal('disposition'), 'Disposition of Funds');
+    if (radioVal('disposition') === 'Other') check('dispositionOther', !!$('dispositionOther').value.trim(), 'Disposition — Other');
+    else setErr('dispositionOther', false);
+
+    const d = $('dateDisposition').value;
+    let dOk = !!d;
+    $('dateDispositionMsg').textContent = 'Please enter the date of disposition.';
+    if (d && r && d < r) { dOk = false; $('dateDispositionMsg').textContent = 'The disposition date can’t be before the date received.'; }
+    check('dateDisposition', dOk, 'Date of Disposition');
+
+    const pe = $('pdfEmail').value.trim().toLowerCase();
+    check('pdfEmail', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pe) && pe.endsWith(PDF_EMAIL_DOMAIN), 'Your Email');
+    const pw = $('pdfPass').value;
+    check('pdfPass', pw.length >= 8, 'PDF Password');
+    check('pdfPass2', pw.length < 8 || $('pdfPass2').value === pw, 'Confirm Password');
+
+    if (CHECK_TYPES.includes(radioVal('formOfReceipt')) && !checkFile) {
+      $('checkMsg').textContent = 'Please attach an image of the check or money order.';
+      check('checkImage', false, 'Check Image');
+    }
+    return problems;
+  }
+
+  // ─── SUBMIT ────────────────────────────────────────────────────────────
+  async function submitForm() {
+    $('ok').style.display = 'none'; $('fail').style.display = 'none';
+    const vs = $('valSummary');
+    const problems = validate();
+    if (problems.length) {
+      vs.textContent = 'Please complete: ' + problems.join(', ') + '.';
+      vs.classList.remove('hidden');
+      const first = document.querySelector('.err');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    vs.classList.add('hidden');
+
+    const btn = $('btn'), txt = $('btnTxt'), spin = $('spin');
+    btn.disabled = true; txt.style.display = 'none'; spin.style.display = 'block';
+
+    const amount = parseAmount();
+    const street = $('addr1').value.trim(), unit = $('unit').value.trim(), city = $('city').value.trim();
+    const fullAddr = street + (unit ? ' ' + unit : '') + ', ' + city;
+    const from = $('receivedFrom').value.trim();
+    const disp = radioVal('disposition');
+    const gap = daysBetween($('dateReceived').value, $('dateDisposition').value);
+    const amtStr = '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+    const body = {
+      name: fmtDate($('dateReceived').value) + ' – ' + amtStr + ' – ' + from + ' – ' + fullAddr + (gap > 3 ? ' – LATE (' + gap + ' days)' : ''),
+      [F.agentEmail]: $('agentEmail').value.trim(),
+      [F.dateReceived]: $('dateReceived').value,
+      [F.formOfReceipt]: radioVal('formOfReceipt'),
+      [F.amount]: amount,
+      [F.receivedFrom]: from,
+      [F.street]: street,
+      [F.unit]: unit,
+      [F.city]: city,
+      [F.disposition]: disp,
+      [F.dispositionOther]: disp === 'Other' ? $('dispositionOther').value.trim() : '',
+      [F.dateDisposition]: $('dateDisposition').value,
+    };
+    if (APTLY_STAGE) body.stage = APTLY_STAGE;
+
+    const receipt = radioVal('formOfReceipt');
+    const answers = [
+      ['Agent Email', $('agentEmail').value.trim()],
+      ['Date Received', fmtDate($('dateReceived').value)],
+      ['Form of Receipt', receipt],
+      ['Amount', amtStr],
+      ['Received From', from],
+      ['Description of Property', fullAddr],
+      ['Disposition of Funds', disp === 'Other' ? 'Other: ' + $('dispositionOther').value.trim() : disp],
+      ['Date of Disposition', fmtDate($('dateDisposition').value) + (gap > 3 ? '  (LATE: ' + gap + ' days after receipt)' : '')],
+      ['Check Image', checkFile ? checkFile.name : 'None attached'],
+    ];
+    const submittedAt = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/Los_Angeles' }) + ' PT';
+    const notes = [];
+
+    // 1) Save the record to Aptly
+    let aptlyOk = false, cardId = null;
+    if (APTLY_BOARD.startsWith('TODO')) {
+      console.warn('Aptly board not configured yet: skipping Aptly save');
+      notes.push('Not saved to Aptly yet (board not configured).');
+    } else {
+      try {
+        const res = await fetch('https://core-api.getaptly.com/api/board/' + APTLY_BOARD, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-token': APTLY_TOKEN },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        aptlyOk = true;
+        try { const j = await res.json(); cardId = (j && j.data && j.data._id) || null; } catch (e) {}
+        if (checkFile && cardId) {
+          try {
+            const fd = new FormData(); fd.append('file', checkFile);
+            const up = await fetch('https://core-api.getaptly.com/api/board/' + APTLY_BOARD + '/' + cardId + '/file', {
+              method: 'POST', headers: { 'x-token': APTLY_TOKEN }, body: fd
+            });
+            if (!up.ok) throw new Error('HTTP ' + up.status);
+          } catch (fileErr) {
+            console.error('Check image upload failed', fileErr);
+            notes.push('The check image didn’t upload to Aptly. Please email it to TC@relisto.com.');
+          }
+        }
+      } catch (e) {
+        console.error('Aptly save failed', e);
+        notes.push('The record did NOT save to Aptly. Please forward the PDF to TC@relisto.com.');
+      }
+    }
+
+    // 2) Build the encrypted PDF and email it
+    let pdfOk = false;
+    const pdfTo = $('pdfEmail').value.trim();
+    try {
+      const pdfBase64 = await buildEncryptedPdf(answers, submittedAt, $('pdfPass').value);
+      const safeName = from.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'record';
+      const res = await fetch(PDF_EMAIL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: pdfTo,
+          filename: 'DRE-Trust-Funds-' + $('dateReceived').value + '-' + safeName + '.pdf',
+          summary: amtStr + ' from ' + from + ' for ' + fullAddr,
+          aptlyCardId: cardId,
+          pdfBase64: pdfBase64
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      pdfOk = true;
+    } catch (e) {
+      console.error('Encrypted PDF email failed', e);
+      notes.push('The encrypted PDF could not be emailed.');
+    }
+
+    if (aptlyOk || pdfOk) {
+      $('ok').innerHTML = '✔ Trust fund record submitted: ' + escapeHtml(amtStr + ' from ' + from + ' for ' + fullAddr) + '.' +
+        (pdfOk ? '<br>An encrypted PDF copy was emailed to <strong>' + escapeHtml(pdfTo) + '</strong>. Open it with the password you set.' : '') +
+        notes.map(n => '<br><strong>Note:</strong> ' + escapeHtml(n)).join('');
+      $('ok').style.display = 'block';
+      $('formFields').classList.add('hidden');
+      $('againBtn').classList.remove('hidden');
+      $('pdfPass').value = ''; $('pdfPass2').value = '';
+    } else {
+      $('fail').style.display = 'block';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    btn.disabled = false; txt.style.display = 'block'; spin.style.display = 'none';
+  }
+
+  // ─── ENCRYPTED PDF ─────────────────────────────────────────────────────
+  // Uses jsPDF's built-in encryption. A user password is ALWAYS set, so every
+  // viewer (including Chrome's built-in one) must prompt for it before opening.
+  function randomOwnerPassword() {
+    const a = new Uint8Array(24); crypto.getRandomValues(a);
+    return Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
+  }
+  function loadImageAsJpeg(file, maxDim) {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) return resolve(null);
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve({ data: c.toDataURL('image/jpeg', 0.85), w: c.width, h: c.height });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };  // e.g. HEIC in Chrome
+      img.src = url;
+    });
+  }
+  async function buildEncryptedPdf(answers, submittedAt, password) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      unit: 'pt', format: 'letter',
+      encryption: { userPassword: password, ownerPassword: randomOwnerPassword(), userPermissions: ['print'] }
+    });
+    const W = doc.internal.pageSize.getWidth(), M = 54;
+    // Header band
+    doc.setFillColor(0, 56, 70); doc.rect(0, 0, W, 96, 'F');
+    try { doc.addImage($('logo').src, 'PNG', M, 20, 56, 56); } catch (e) {}
+    doc.setTextColor(177, 201, 147); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+    doc.text('RELISTO DRE FORM', M + 72, 38);
+    doc.setTextColor(255, 255, 255); doc.setFontSize(14);
+    doc.text('Record of All Trust Funds Received', M + 72, 56);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    doc.text("Not Placed in Broker's Trust Account", M + 72, 72);
+
+    doc.setTextColor(90, 106, 98); doc.setFontSize(9);
+    doc.text('Submitted ' + submittedAt, M, 122);
+
+    let y = 146;
+    const labelW = 150;
+    answers.forEach(([label, value], i) => {
+      const lines = doc.splitTextToSize(String(value || '—'), W - M * 2 - labelW - 12);
+      const h = Math.max(24, lines.length * 13 + 11);
+      if (i % 2 === 0) { doc.setFillColor(240, 245, 241); doc.rect(M, y, W - M * 2, h, 'F'); }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(90, 106, 98);
+      doc.text(label.toUpperCase(), M + 8, y + 15);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(26, 42, 36);
+      doc.text(lines, M + labelW, y + 15);
+      y += h;
+    });
+    doc.setDrawColor(177, 201, 147); doc.setLineWidth(1.5); doc.line(M, y + 6, W - M, y + 6);
+
+    // Check image on its own page
+    const img = await loadImageAsJpeg(checkFile, 1600);
+    if (img) {
+      doc.addPage();
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(0, 56, 70);
+      doc.text('Check Image', M, 60);
+      const maxW = W - M * 2, maxH = doc.internal.pageSize.getHeight() - 140;
+      const s = Math.min(maxW / img.w, maxH / img.h);
+      doc.addImage(img.data, 'JPEG', M, 80, img.w * s, img.h * s);
+    } else if (checkFile) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(90, 106, 98);
+      doc.text('Check file "' + checkFile.name + '" could not be embedded here; it is attached to the Aptly record.', M, y + 26);
+    }
+    return doc.output('datauristring').split(',')[1];
+  }
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function resetForm() {
+    const keepEmail = $('agentEmail').value;
+    document.querySelectorAll('#formFields input[type=text], #formFields input[type=date]').forEach(el => el.value = '');
+    document.querySelectorAll('#formFields input[type=radio]').forEach(el => el.checked = false);
+    document.querySelectorAll('.err').forEach(el => el.classList.remove('err'));
+    $('agentEmail').value = keepEmail;
+    $('pdfPass').value = ''; $('pdfPass2').value = '';
+    clearFile(); onReceiptChange(); onDispositionChange(); initDates();
+    $('ok').style.display = 'none';
+    $('formFields').classList.remove('hidden');
+    $('againBtn').classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
