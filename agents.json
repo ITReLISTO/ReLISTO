@@ -1,0 +1,15 @@
+{
+  "_readme": "Master list of ReLISTO agents. Every form's agent dropdown loads from this file. To add or remove an agent, edit this file only. 'default' marks the agent used when someone is unsure.",
+  "agents": [
+    { "name": "Eric Baird",           "email": "eric@relisto.com", "default": true },
+    { "name": "CJ",                   "email": "cj@relisto.com" },
+    { "name": "Anh",                  "email": "anh@relisto.com" },
+    { "name": "Joseph Johnston",      "email": "joseph@relisto.com" },
+    { "name": "Jackie Tom",           "email": "jackie@relisto.com" },
+    { "name": "Sue Bowers",           "email": "sue@relisto.com" },
+    { "name": "Jody Cox",             "email": "jody@relisto.com" },
+    { "name": "Elizabeth Kim",        "email": "liz@relisto.com" },
+    { "name": "Virginia Imbriogiano", "email": "virginia@relisto.com" },
+    { "name": "Aliea Marrero",        "email": "aliea@relisto.com" }
+  ]
+}
