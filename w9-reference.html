@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRS Form W-9 (Reference) – ReLISTO</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --teal:#003846; --sage:#D9E2DB; --lime:#B1C993; --muted:#5a6a62; }
+    body { background:var(--sage); font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; padding:24px 16px 48px;
+           -webkit-user-select:none; user-select:none; }
+    .bar { max-width:860px; margin:0 auto 18px; background:var(--teal); color:#fff; border-radius:4px; padding:18px 22px; border-bottom:4px solid var(--lime); }
+    .bar h1 { font-family:'Century Gothic','CenturyGothic','AppleGothic',sans-serif; font-size:19px; margin-bottom:6px; }
+    .bar p { font-size:13px; line-height:1.6; color:rgba(255,255,255,0.85); }
+    .bar a { color:var(--lime); font-weight:700; }
+    #pages { max-width:860px; margin:0 auto; }
+    #pages canvas { display:block; width:100%; height:auto; background:#fff; margin-bottom:16px; box-shadow:0 4px 18px rgba(0,0,0,0.12); border-radius:2px; pointer-events:none; }
+    #status { text-align:center; color:var(--muted); font-size:14px; padding:40px 0; }
+    /* Not printable: print shows only a notice */
+    .print-note { display:none; }
+    @media print {
+      body > *:not(.print-note) { display:none !important; }
+      .print-note { display:block !important; font-size:16px; padding:40px; }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false">
+  <div class="bar">
+    <h1>IRS Form W-9: Reference Copy</h1>
+    <p>This is the official IRS form and instructions, for reference only. Please don't fill out or print this form. Close this tab and complete the online form instead.</p>
+  </div>
+  <div id="pages"><div id="status">Loading form…</div></div>
+  <div class="print-note">This reference copy can't be printed. Please complete the online ReLISTO W-9 form instead.</div>
+
+<script>
+  // Renders fw9.pdf (official IRS file, uploaded next to this page) as flat images:
+  // no form fields, no download button, not printable.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  (async function(){
+    var box = document.getElementById('pages'), status = document.getElementById('status');
+    try {
+      var pdf = await pdfjsLib.getDocument('fw9.pdf').promise;
+      status.remove();
+      var scale = Math.min(2.5, Math.max(1.5, (window.devicePixelRatio || 1) * 1.25));
+      for (var i = 1; i <= pdf.numPages; i++) {
+        var page = await pdf.getPage(i);
+        var vp = page.getViewport({ scale: scale });
+        var c = document.createElement('canvas');
+        c.width = vp.width; c.height = vp.height;
+        box.appendChild(c);
+        await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      }
+    } catch (e) {
+      console.error(e);
+      status.textContent = 'The reference form could not be loaded. Please contact ReLISTO if you need a copy.';
+    }
+  })();
+  // Block Ctrl/Cmd+P and Ctrl/Cmd+S
+  document.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 's')) { e.preventDefault(); }
+  });
+</script>
+</body>
+</html>
